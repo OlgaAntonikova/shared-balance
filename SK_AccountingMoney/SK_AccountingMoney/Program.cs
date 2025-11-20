@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using SK_AccountingMoney.Data;
+using SK_AccountingMoney.Services;
 
 namespace SK_AccountingMoney
 {
@@ -20,6 +21,8 @@ namespace SK_AccountingMoney
             var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
             builder.Services.AddDbContext<AppDbContext>(options =>
                 options.UseSqlite(connectionString));
+
+            builder.Services.AddScoped<IBalanceService, BalanceService>();
 
             builder.Services.AddCors(options =>
             {
@@ -44,17 +47,27 @@ namespace SK_AccountingMoney
                         new Models.User
                         {
                             TelegramId = 100000001,
-                            UserName = "olga_antonikova",
-                            Balance = 0.00m,                            
+                            UserName = "olga_antonikova",                                                        
                         },
                         new Models.User
                         {
                             TelegramId = 100000002,
-                            UserName = "second_user",
-                            Balance = 0.00m,                            
+                            UserName = "second_user",                                                       
                         }
                     );
                     dbContext.SaveChanges();
+                }
+
+                if (!dbContext.SharedBalances.Any())
+                {                    
+                    dbContext.SharedBalances.Add(new Models.SharedBalance
+                    {
+                        Name = "Main",
+                        Balance = 500.00m, 
+                        CreatedAt = DateTime.UtcNow,
+                        UpdatedAt = DateTime.UtcNow
+                    });
+                    dbContext.SaveChanges();                    
                 }
             }
 

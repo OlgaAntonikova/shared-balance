@@ -16,10 +16,17 @@ namespace SK_AccountingMoney
 
             // Configuration
             var configuration = builder.Configuration;
-            var jwtSecret = configuration["Jwt:Secret"] ?? "REMOVED_JWT_SECRET";
+            // Secrets come only from environment variables (Jwt__Secret, Telegram__BotToken)
+            // or user secrets in development; the app refuses to start without them
+            var jwtSecret = configuration["Jwt:Secret"];
             var jwtIssuer = configuration["Jwt:Issuer"] ?? "SK_AccountingMoney";
             var jwtAudience = configuration["Jwt:Audience"] ?? "SK_AccountingMoney";
-            var botToken = configuration["Telegram:BotToken"] ?? "REMOVED_BOT_TOKEN";
+            var botToken = configuration["Telegram:BotToken"];
+
+            if (string.IsNullOrWhiteSpace(jwtSecret))
+                throw new InvalidOperationException("Jwt:Secret is not configured. Set the Jwt__Secret environment variable.");
+            if (string.IsNullOrWhiteSpace(botToken))
+                throw new InvalidOperationException("Telegram:BotToken is not configured. Set the Telegram__BotToken environment variable.");
 
             builder.Services.AddControllers()
                 .AddJsonOptions(options =>

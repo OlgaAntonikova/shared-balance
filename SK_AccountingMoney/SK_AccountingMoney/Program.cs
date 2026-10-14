@@ -81,20 +81,17 @@ namespace SK_AccountingMoney
                 var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
                 dbContext.Database.EnsureCreated(); 
                 
-                if (!dbContext.Users.Any())
+                // Members allowed to sign in are seeded once, into an empty database,
+                // from configuration (Seed:Users) so that no Telegram ids live in the code
+                var seedUsers = configuration.GetSection("Seed:Users").Get<List<SeedUser>>() ?? [];
+
+                if (!dbContext.Users.Any() && seedUsers.Count > 0)
                 {
-                    dbContext.Users.AddRange(
-                        new User
-                        {
-                            TelegramId = 100000001,
-                            UserName = "olga_antonikova",                              
-                        },
-                        new User
-                        {
-                            TelegramId = 100000002,
-                            UserName = "second_user",                                                       
-                        }
-                    );
+                    dbContext.Users.AddRange(seedUsers.Select(u => new User
+                    {
+                        TelegramId = u.TelegramId,
+                        UserName = u.UserName
+                    }));
                     dbContext.SaveChanges();
                 }
 
@@ -134,5 +131,7 @@ namespace SK_AccountingMoney
 
             app.Run();
         }
+
+        private sealed record SeedUser(long TelegramId, string UserName);
     }
 }

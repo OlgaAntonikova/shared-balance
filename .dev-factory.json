@@ -1,0 +1,6 @@
+{
+  "version": 1,
+  "build": ["dotnet", "build", "SK_AccountingMoney/SK_AccountingMoney.sln"],
+  "test": ["dotnet", "test", "SK_AccountingMoney/SK_AccountingMoney.sln"],
+  "sourceExtensions": [".cs", ".js", ".html", ".css"]
+}

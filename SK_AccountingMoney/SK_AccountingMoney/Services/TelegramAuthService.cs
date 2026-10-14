@@ -45,9 +45,10 @@ namespace SK_AccountingMoney.Services
                 var secretKey = ComputeHMACSHA256(Encoding.UTF8.GetBytes("WebAppData"), Encoding.UTF8.GetBytes(_botToken));
 
                 var calculatedHash = ComputeHMACSHA256(secretKey, Encoding.UTF8.GetBytes(dataCheckString));
-                var calculatedHashHex = ByteArrayToHexString(calculatedHash);
+                var receivedHash = Convert.FromHexString(hash);
 
-                return string.Equals(calculatedHashHex, hash, StringComparison.OrdinalIgnoreCase);
+                // Constant-time comparison so the hash cannot be guessed byte by byte from response timing
+                return CryptographicOperations.FixedTimeEquals(calculatedHash, receivedHash);
             }
             catch (Exception ex)
             {
@@ -116,9 +117,9 @@ namespace SK_AccountingMoney.Services
             if (string.IsNullOrWhiteSpace(initData))
                 return new ValidationResult { IsValid = false, Error = "InitData is empty" };
 
-            //// 1. Signature
-            //if (!ValidateInitData(initData))
-            //    return new ValidationResult { IsValid = false, Error = "Invalid signature" };
+            // 1. Signature
+            if (!ValidateInitData(initData))
+                return new ValidationResult { IsValid = false, Error = "Invalid signature" };
 
             // 2. Time
             if (!CheckAuthDate(initData, maxAgeSeconds))
@@ -140,11 +141,6 @@ namespace SK_AccountingMoney.Services
         {
             using var hmac = new HMACSHA256(key);
             return hmac.ComputeHash(data);
-        }
-
-        private static string ByteArrayToHexString(byte[] bytes)
-        {
-            return BitConverter.ToString(bytes).Replace("-", "").ToLowerInvariant();
         }
     }
 
